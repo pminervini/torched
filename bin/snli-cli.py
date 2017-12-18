@@ -35,7 +35,7 @@ def get_args():
     parser.add_argument('--preserve-case', action='store_false', dest='lower')
     parser.add_argument('--no-projection', action='store_false', dest='projection')
     parser.add_argument('--train_embed', action='store_false', dest='fix_emb')
-    parser.add_argument('--gpu', type=int, default=0)
+    parser.add_argument('--gpu', type=int, default=-1)
     parser.add_argument('--save_path', type=str, default='results')
     parser.add_argument('--vector_cache', type=str, default=os.path.join(os.getcwd(), '.vector_cache/input_vectors.pt'))
     parser.add_argument('--word_vectors', type=str, default='glove.6B.100d')
@@ -44,8 +44,8 @@ def get_args():
 
 args = get_args()
 
-if torch.cuda.is_available():
-    torch.cuda.set_device(args.gpu)
+# if torch.cuda.is_available():
+torch.cuda.set_device(args.gpu)
 
 inputs = data.Field(lower=args.lower)
 answers = data.Field(sequential=False)
@@ -81,8 +81,8 @@ else:
     if args.word_vectors:
         model.embed.weight.data = inputs.vocab.vectors
 
-        if torch.cuda.is_available():
-            model.cuda()
+        # if torch.cuda.is_available():
+        model.cuda()
 
 criterion = nn.CrossEntropyLoss()
 opt = O.Adam(model.parameters(), lr=args.lr)
