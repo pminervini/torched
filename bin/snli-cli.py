@@ -39,7 +39,7 @@ def get_args():
     parser.add_argument('--save_path', type=str, default='results')
     parser.add_argument('--vector_cache', type=str, default=os.path.join(os.getcwd(), '.vector_cache/input_vectors.pt'))
     parser.add_argument('--word_vectors', type=str, default='glove.6B.100d')
-    parser.add_argument('--resume_snapshot', type=str, default='')
+    parser.add_argument('--resume_snapshot', type=str, default=None)
     return parser.parse_args()
 
 args = get_args()
