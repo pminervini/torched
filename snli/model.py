@@ -7,6 +7,8 @@ from torch.autograd import Variable
 
 
 class Bottle(nn.Module):
+    def __init__(self):
+        super(Bottle, self).__init__()
 
     def forward(self, input):
         if len(input.size()) <= 2:
@@ -17,17 +19,18 @@ class Bottle(nn.Module):
 
 
 class Linear(Bottle, nn.Linear):
-    pass
-
+    def __init__(self):
+        super(Linear, self).__init__()
 
 class Encoder(nn.Module):
-
     def __init__(self, config):
         super(Encoder, self).__init__()
         self.config = config
         input_size = config.d_proj if config.projection else config.d_embed
-        self.rnn = nn.LSTM(input_size=input_size, hidden_size=config.d_hidden,
-                           num_layers=config.n_layers, dropout=config.dp_ratio,
+        self.rnn = nn.LSTM(input_size=input_size,
+                           hidden_size=config.d_hidden,
+                           num_layers=config.n_layers,
+                           dropout=config.dp_ratio,
                            bidirectional=config.birnn)
 
     def forward(self, inputs):
@@ -39,7 +42,6 @@ class Encoder(nn.Module):
 
 
 class SNLIClassifier(nn.Module):
-
     def __init__(self, config):
         super(SNLIClassifier, self).__init__()
         self.config = config
@@ -48,10 +50,13 @@ class SNLIClassifier(nn.Module):
         self.encoder = Encoder(config)
         self.dropout = nn.Dropout(p=config.dp_ratio)
         self.relu = nn.ReLU()
-        seq_in_size = 2*config.d_hidden
+        seq_in_size = 2 * config.d_hidden
+
         if self.config.birnn:
             seq_in_size *= 2
-        lin_config = [seq_in_size]*2
+
+        lin_config = [seq_in_size] * 2
+
         self.out = nn.Sequential(
             Linear(*lin_config),
             self.relu,
@@ -67,12 +72,15 @@ class SNLIClassifier(nn.Module):
     def forward(self, batch):
         prem_embed = self.embed(batch.premise)
         hypo_embed = self.embed(batch.hypothesis)
+
         if self.config.fix_emb:
             prem_embed = Variable(prem_embed.data)
             hypo_embed = Variable(hypo_embed.data)
+
         if self.config.projection:
             prem_embed = self.relu(self.projection(prem_embed))
             hypo_embed = self.relu(self.projection(hypo_embed))
+
         premise = self.encoder(prem_embed)
         hypothesis = self.encoder(hypo_embed)
         scores = self.out(torch.cat([premise, hypothesis], 1))

@@ -46,7 +46,7 @@ if config.birnn:
     config.n_cells *= 2
 
 if args.resume_snapshot:
-    model = torch.load(args.resume_snapshot, map_location=lambda storage, locatoin: storage.cuda(args.gpu))
+    model = torch.load(args.resume_snapshot, map_location=lambda storage, _: storage.cuda(args.gpu))
 else:
     model = SNLIClassifier(config)
     if args.word_vectors:
@@ -88,13 +88,15 @@ for epoch in range(args.epochs):
         loss = criterion(answer, batch.label)
 
         # backpropagate and update optimizer learning rate
-        loss.backward(); opt.step()
+        loss.backward()
+        opt.step()
 
         # checkpoint model periodically
         if iterations % args.save_every == 0:
             snapshot_prefix = os.path.join(args.save_path, 'snapshot')
             snapshot_path = snapshot_prefix + '_acc_{:.4f}_loss_{:.6f}_iter_{}_model.pt'.format(train_acc, loss.data[0], iterations)
             torch.save(model, snapshot_path)
+
             for f in glob.glob(snapshot_prefix + '*'):
                 if f != snapshot_path:
                     os.remove(f)
@@ -103,7 +105,8 @@ for epoch in range(args.epochs):
         if iterations % args.dev_every == 0:
 
             # switch model to evaluation mode
-            model.eval(); dev_iter.init_epoch()
+            model.eval()
+            dev_iter.init_epoch()
 
             # calculate accuracy on validation set
             n_dev_correct, dev_loss = 0, 0
@@ -111,11 +114,12 @@ for epoch in range(args.epochs):
                  answer = model(dev_batch)
                  n_dev_correct += (torch.max(answer, 1)[1].view(dev_batch.label.size()).data == dev_batch.label.data).sum()
                  dev_loss = criterion(answer, dev_batch.label)
+
             dev_acc = 100. * n_dev_correct / len(dev)
 
-            print(dev_log_template.format(time.time()-start,
-                epoch, iterations, 1+batch_idx, len(train_iter),
-                100. * (1+batch_idx) / len(train_iter), loss.data[0], dev_loss.data[0], train_acc, dev_acc))
+            print(dev_log_template.format(time.time() - start, epoch, iterations, 1 + batch_idx, len(train_iter),
+                                          100. * (1+batch_idx) / len(train_iter), loss.data[0], dev_loss.data[0],
+                                          train_acc, dev_acc))
 
             # update best valiation set accuracy
             if dev_acc > best_dev_acc:
