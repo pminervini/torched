@@ -7,9 +7,6 @@ from torch.autograd import Variable
 
 
 class Bottle(nn.Module):
-    def __init__(self):
-        super(Bottle, self).__init__()
-
     def forward(self, input):
         if len(input.size()) <= 2:
             return super(Bottle, self).forward(input)
@@ -19,8 +16,7 @@ class Bottle(nn.Module):
 
 
 class Linear(Bottle, nn.Linear):
-    def __init__(self, *args, **kwargs):
-        super(Linear, self).__init__(*args, **kwargs)
+    pass
 
 
 class Encoder(nn.Module):
