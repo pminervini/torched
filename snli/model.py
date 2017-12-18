@@ -19,8 +19,9 @@ class Bottle(nn.Module):
 
 
 class Linear(Bottle, nn.Linear):
-    def __init__(self):
-        super(Linear, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(Linear, self).__init__(*args, **kwargs)
+
 
 class Encoder(nn.Module):
     def __init__(self, config):
