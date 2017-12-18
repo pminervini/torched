@@ -80,7 +80,9 @@ else:
     model = SNLIClassifier(config)
     if args.word_vectors:
         model.embed.weight.data = inputs.vocab.vectors
-        model.cuda()
+
+        if torch.cuda.is_available():
+            model.cuda()
 
 criterion = nn.CrossEntropyLoss()
 opt = O.Adam(model.parameters(), lr=args.lr)
