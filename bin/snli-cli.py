@@ -1,21 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import glob
 import os
 import time
-import glob
-
 from argparse import ArgumentParser
 
 import torch
-import torch.optim as O
 import torch.nn as nn
-
+import torch.optim as O
 from torchtext import data
 from torchtext import datasets
 
-from snli.model import SNLIClassifier
-from snli.util import makedirs
+from torched.snli.model import SNLIClassifier
+from torched.util import makedirs
 
 
 def get_args():
