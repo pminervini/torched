@@ -43,7 +43,9 @@ def get_args():
     return parser.parse_args()
 
 args = get_args()
-torch.cuda.set_device(args.gpu)
+
+if torch.cuda.is_available():
+    torch.cuda.set_device(args.gpu)
 
 inputs = data.Field(lower=args.lower)
 answers = data.Field(sequential=False)
