@@ -8,7 +8,7 @@ from argparse import ArgumentParser
 
 import torch
 import torch.nn as nn
-import torch.optim as O
+import torch.optim as optim
 from torchtext import data
 from torchtext import datasets
 
@@ -33,7 +33,7 @@ def get_args():
     parser.add_argument('--preserve-case', action='store_false', dest='lower')
     parser.add_argument('--no-projection', action='store_false', dest='projection')
     parser.add_argument('--train_embed', action='store_false', dest='fix_emb')
-    parser.add_argument('--gpu', type=int, default=-1)
+    parser.add_argument('--gpu', type=int, default=0)
     parser.add_argument('--save_path', type=str, default='results')
     parser.add_argument('--vector_cache', type=str, default=os.path.join(os.getcwd(), '.vector_cache/input_vectors.pt'))
     parser.add_argument('--word_vectors', type=str, default='glove.6B.100d')
@@ -42,8 +42,8 @@ def get_args():
 
 args = get_args()
 
-# if torch.cuda.is_available():
-torch.cuda.set_device(args.gpu)
+gpu_id = args.gpu if torch.cuda.is_available() else -1
+torch.cuda.set_device(gpu_id)
 
 inputs = data.Field(lower=args.lower)
 answers = data.Field(sequential=False)
@@ -61,7 +61,7 @@ if args.word_vectors:
 answers.build_vocab(train)
 
 train_iter, dev_iter, test_iter = data.BucketIterator.splits(
-            (train, dev, test), batch_size=args.batch_size, device=args.gpu)
+    (train, dev, test), batch_size=args.batch_size, device=gpu_id)
 
 config = args
 config.n_embed = len(inputs.vocab)
@@ -73,7 +73,7 @@ if config.birnn:
     config.n_cells *= 2
 
 if args.resume_snapshot:
-    model = torch.load(args.resume_snapshot, map_location=lambda storage, _: storage.cuda(args.gpu))
+    model = torch.load(args.resume_snapshot, map_location=lambda storage, _: storage.cuda(gpu_id))
 else:
     model = SNLIClassifier(config)
     if args.word_vectors:
@@ -83,7 +83,7 @@ else:
             model.cuda()
 
 criterion = nn.CrossEntropyLoss()
-opt = O.Adam(model.parameters(), lr=args.lr)
+opt = optim.Adam(model.parameters(), lr=args.lr)
 
 iterations = 0
 start = time.time()
